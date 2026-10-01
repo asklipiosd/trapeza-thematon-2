@@ -17,5 +17,7 @@ options:
   -d, --download        download instead of opening tdf
   -o, --outputFile OUTPUTFILE
                         specify an output name
-
 ```
+
+## Σημειώσεις
+Υπάρχει gui( μέσω powershell) και bash έκδοση. Η bash είναι σκατά
