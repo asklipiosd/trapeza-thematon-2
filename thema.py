@@ -1,30 +1,33 @@
 #!/usr/bin/env python3
 
+# -- [suppress warnings] ------------------------------------------------------
+import warnings
+from cryptography.utils import CryptographyDeprecationWarning
+warnings.filterwarnings("ignore", category=CryptographyDeprecationWarning)
+
 # -- [imports] ----------------------------------------------------------------
 from urllib.request import urlretrieve, urlcleanup
+from pypdf import PdfWriter
+import pypdf
 import subprocess
 import argparse
-from pypdf import PdfWriter
 import tempfile
 import shutil
 
-# -- [check if shutils is available] ------------------------------------------
-if shutil.which("tdf") is None:
-	print("well tdf was not found")
-	print("it's like 50 lines go edit the last one")
-	exit(1)
-
 # -- [cli parsing] ------------------------------------------------------------
 parser = argparse.ArgumentParser(
-	prog='thema fucking downloader',
-	description='it downloads themata',
-	epilog='epilogue'
+	prog='thema downloader',
 )
 parser.add_argument('-s', '--solutions',
-	action='store_true'
+	action='store_true',
+	help = "query for solutions too"
 )
 parser.add_argument('-d', '--download',
-	action='store_true'
+	action='store_true',
+	help = "download instead of opening tdf"
+)
+parser.add_argument('-o', '--outputFile',
+	help = "specify an output name"
 )
 parser.add_argument('files', nargs='*')
 args = parser.parse_args()
@@ -74,15 +77,25 @@ else:
 
 # -- [download or view] -------------------------------------------------------
 if args.download:
-	merger.write("_".join(args.files) + ".pdf")
+	if args.outputFile is not None:
+		name = args.outputFile
+	else:
+		name = "_".join(args.files) + ".pdf"
+	merger.write(name)
 	merger.close()
 	urlcleanup()
 else:
 	with tempfile.NamedTemporaryFile(suffix=".pdf") as f:
-		merger.write(f)
-		merger.close()
-		f.flush()
-		try:
-			subprocess.run(["tdf","-m","1", f.name])
-		finally:
-			urlcleanup()
+		# -- [check if tdf is available] ----------------------------------------------
+		if shutil.which("tdf") is None:
+			print("well tdf was not found")
+			print("it's like 50 lines go edit the last one")
+			exit(1)
+		else:
+			merger.write(f)
+			merger.close()
+			f.flush()
+			try:
+				subprocess.run(["tdf","-m","1", f.name])
+			finally:
+				urlcleanup()
